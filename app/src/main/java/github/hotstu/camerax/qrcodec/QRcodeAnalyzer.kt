@@ -14,18 +14,18 @@ import com.google.zxing.common.HybridBinarizer
  * @since 6/10/19
  */
 class QRcodeAnalyzer : ImageAnalysis.Analyzer {
-    private val reader: MultiFormatReader = MultiFormatReader()
-
-    init {
+    private val reader: MultiFormatReader = MultiFormatReader().apply {
         val map = mapOf<DecodeHintType, Collection<BarcodeFormat>>(
             Pair(DecodeHintType.POSSIBLE_FORMATS, arrayListOf(BarcodeFormat.QR_CODE))
         )
-        reader.setHints(map)
+        setHints(map)
     }
 
+
     override fun analyze(image: ImageProxy, rotationDegrees: Int) {
-        if (ImageFormat.YUV_420_888 != image.format) {
-            Log.e("BarcodeAnalyzer", "expect YUV_420_888, now = ${image.format}")
+        //YUV_420 is normally the input type here, but other YUV types are also supported in theory
+        if (ImageFormat.YUV_420_888 != image.format && ImageFormat.YUV_422_888 != image.format && ImageFormat.YUV_444_888 != image.format) {
+            Log.e("BarcodeAnalyzer", "expect YUV, now = ${image.format}")
             return
         }
         val buffer = image.planes[0].buffer
