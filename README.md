@@ -6,3 +6,5 @@
 QRcode decoder based on CameraX &amp; zxing-core, in less than 50 lines
 
 
+article：https://www.jianshu.com/p/3ce81b55468d
+
