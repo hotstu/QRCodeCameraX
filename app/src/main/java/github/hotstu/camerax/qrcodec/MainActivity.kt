@@ -27,6 +27,9 @@ const val IMMERSIVE_FLAG_TIMEOUT = 500L
 
 class MainActivity : AppCompatActivity() {
 
+    var analyzerHandler: Handler? = null
+    var analysis: ImageAnalysis? = null
+
     @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,16 +51,17 @@ class MainActivity : AppCompatActivity() {
                         val analysisConfig = ImageAnalysisConfig.Builder().apply {
                             setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
                             val analyzerThread = HandlerThread("BarcodeAnalyzer").apply { start() }
-                            setCallbackHandler(Handler(analyzerThread.looper))
+                            analyzerHandler = Handler(analyzerThread.looper)
+                            setCallbackHandler(analyzerHandler!!)
                             setTargetAspectRatio(screenAspectRatio)
                             setTargetRotation(textureView.display.rotation)
                             setLensFacing(CameraX.LensFacing.BACK)
                         }.build()
 
                         val preview = AutoFitPreviewBuilder.build(previewConfig, textureView)
-                        val analysis = ImageAnalysis(analysisConfig)
+                        analysis = ImageAnalysis(analysisConfig)
 
-                        analysis.analyzer = QRcodeAnalyzer()
+                        analysis!!.analyzer = QRcodeAnalyzer()
 
                         CameraX.bindToLifecycle(this@MainActivity,
                                 preview,
@@ -74,5 +78,12 @@ class MainActivity : AppCompatActivity() {
         textureView.postDelayed({
             textureView.systemUiVisibility = FLAGS_FULLSCREEN
         }, IMMERSIVE_FLAG_TIMEOUT)
+    }
+
+    override fun onDestroy() {
+        analyzerHandler?.removeCallbacksAndMessages(null)
+        analyzerHandler?.looper?.quitSafely()
+        analysis?.analyzer = null
+        super.onDestroy()
     }
 }
