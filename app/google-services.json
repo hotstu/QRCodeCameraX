@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "65304756582",
+    "firebase_url": "https://man-on-the-roof.firebaseio.com",
+    "project_id": "man-on-the-roof",
+    "storage_bucket": "man-on-the-roof.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:65304756582:android:3f75e8e55686240b",
+        "android_client_info": {
+          "package_name": "github.hotstu.camerax.qrcodec"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "65304756582-5rvt96gdqoumqon59deab7h42ugqki8m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB06RgN4jsrjYoAb5swYfIaxHqdvt5ryJg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "65304756582-5rvt96gdqoumqon59deab7h42ugqki8m.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

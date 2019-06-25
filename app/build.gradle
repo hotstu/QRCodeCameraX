@@ -34,5 +34,9 @@ dependencies {
     // If you want to use Camera2 extensions.
     implementation "androidx.camera:camera-camera2:${camerax_version}"
     implementation 'com.google.zxing:core:3.3.2'
+    implementation 'com.google.firebase:firebase-ml-vision:21.0.0'
     testImplementation 'junit:junit:4.12'
 }
+
+apply plugin: 'com.google.gms.google-services'
+

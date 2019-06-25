@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.DisplayMetrics
+import android.util.Log
 import android.util.Rational
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -12,6 +13,8 @@ import androidx.camera.core.CameraX
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageAnalysisConfig
 import androidx.camera.core.PreviewConfig
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
 import com.tbruyelle.rxpermissions2.RxPermissions
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -61,7 +64,14 @@ class MainActivity : AppCompatActivity() {
                         val preview = AutoFitPreviewBuilder.build(previewConfig, textureView)
                         analysis = ImageAnalysis(analysisConfig)
 
-                        analysis!!.analyzer = QRcodeAnalyzer()
+                        val googlePlayServicesAvailable = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
+                        if (googlePlayServicesAvailable == ConnectionResult.SUCCESS) {
+                            Log.d("MainActivity", "google play services avalable, using visionBarcodeDetector")
+                            analysis!!.analyzer = MLQRcodeAnalyzer()
+                        } else {
+                            Log.d("MainActivity", "google play services inavalable, fallback to zxing")
+                            analysis!!.analyzer = QRcodeAnalyzer()
+                        }
 
                         CameraX.bindToLifecycle(this@MainActivity,
                                 preview,
