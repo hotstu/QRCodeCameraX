@@ -5,10 +5,13 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
+import com.google.android.gms.tasks.Task
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcode
 import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetector
+import com.google.firebase.ml.vision.barcode.FirebaseVisionBarcodeDetectorOptions
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
+import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
 
 
 /**
@@ -20,20 +23,39 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImage
 class MLQRcodeAnalyzer : ImageAnalysis.Analyzer, OnSuccessListener<List<FirebaseVisionBarcode>>, OnFailureListener {
 
     private val detector: FirebaseVisionBarcodeDetector by lazy {
-        FirebaseVision.getInstance().visionBarcodeDetector
+        val options = FirebaseVisionBarcodeDetectorOptions.Builder()
+            .setBarcodeFormats(
+                FirebaseVisionBarcode.FORMAT_QR_CODE
+            )
+            .build()
+        FirebaseVision.getInstance().getVisionBarcodeDetector(options)
     }
+
+    var pendingTask: Task<out Any>? = null
 
 
     override fun analyze(image: ImageProxy, rotationDegrees: Int) {
+        // Throttle calls to the detector.
+        if (pendingTask != null && !pendingTask!!.isComplete) {
+            Log.d("MLQRcodeAnalyzer", "Throttle calls to the detector")
+            return
+        }
         //YUV_420 is normally the input type here
+        var rotation = rotationDegrees % 360
+        if (rotation < 0) {
+            rotation += 360
+        }
         val mediaImage = FirebaseVisionImage.fromMediaImage(image.image!!, when (rotationDegrees) {
-            0 -> 0
-            90 -> 1
-            180 -> 2
-            270 -> 3
-            else -> 0
+            0 -> FirebaseVisionImageMetadata.ROTATION_0
+            90 -> FirebaseVisionImageMetadata.ROTATION_90
+            180 -> FirebaseVisionImageMetadata.ROTATION_180
+            270 -> FirebaseVisionImageMetadata.ROTATION_270
+            else -> {
+                Log.e("MLQRcodeAnalyzer", "unexpected rotation: $rotationDegrees")
+                FirebaseVisionImageMetadata.ROTATION_0
+            }
         })
-        detector.detectInImage(mediaImage).also {
+        pendingTask = detector.detectInImage(mediaImage).also {
             it.addOnSuccessListener(this)
             it.addOnFailureListener(this)
         }
@@ -45,7 +67,9 @@ class MLQRcodeAnalyzer : ImageAnalysis.Analyzer, OnSuccessListener<List<Firebase
     }
 
     override fun onSuccess(result: List<FirebaseVisionBarcode>) {
-        Log.d("MLQRcodeAnalyzer", "onSuccess:$result")
+        for (barcode in result) {
+            Log.d("MLQRcodeAnalyzer", "onSuccess:${barcode.rawValue}")
+        }
 
     }
 }
