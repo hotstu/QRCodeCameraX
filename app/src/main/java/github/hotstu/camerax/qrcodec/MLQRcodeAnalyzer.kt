@@ -45,7 +45,7 @@ class MLQRcodeAnalyzer : ImageAnalysis.Analyzer, OnSuccessListener<List<Firebase
         if (rotation < 0) {
             rotation += 360
         }
-        val mediaImage = FirebaseVisionImage.fromMediaImage(image.image!!, when (rotationDegrees) {
+        val mediaImage = FirebaseVisionImage.fromMediaImage(image.image!!, when (rotation) {
             0 -> FirebaseVisionImageMetadata.ROTATION_0
             90 -> FirebaseVisionImageMetadata.ROTATION_90
             180 -> FirebaseVisionImageMetadata.ROTATION_180
