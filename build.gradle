@@ -28,7 +28,7 @@ allprojects {
 subprojects {
     configurations.all {
         resolutionStrategy {
-            force "androidx.core:core:1.0.2"
+            force "androidx.core:core:1.2.0"
         }
     }
 }

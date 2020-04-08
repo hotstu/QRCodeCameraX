@@ -34,12 +34,13 @@ class MLQRcodeAnalyzer : ImageAnalysis.Analyzer, OnSuccessListener<List<Firebase
     var pendingTask: Task<out Any>? = null
 
 
-    override fun analyze(image: ImageProxy, rotationDegrees: Int) {
+    override fun analyze(image: ImageProxy) {
         // Throttle calls to the detector.
         if (pendingTask != null && !pendingTask!!.isComplete) {
             Log.d("MLQRcodeAnalyzer", "Throttle calls to the detector")
             return
         }
+        val rotationDegrees = image.imageInfo.rotationDegrees
         //YUV_420 is normally the input type here
         var rotation = rotationDegrees % 360
         if (rotation < 0) {

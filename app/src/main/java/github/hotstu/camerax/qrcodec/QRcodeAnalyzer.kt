@@ -22,7 +22,7 @@ class QRcodeAnalyzer : ImageAnalysis.Analyzer {
     }
 
 
-    override fun analyze(image: ImageProxy, rotationDegrees: Int) {
+    override fun analyze(image: ImageProxy) {
         //YUV_420 is normally the input type here, but other YUV types are also supported in theory
         if (ImageFormat.YUV_420_888 != image.format && ImageFormat.YUV_422_888 != image.format && ImageFormat.YUV_444_888 != image.format) {
             Log.e("BarcodeAnalyzer", "expect YUV, now = ${image.format}")
@@ -54,6 +54,5 @@ class QRcodeAnalyzer : ImageAnalysis.Analyzer {
         } catch (e: Exception) {
             Log.d("BarcodeAnalyzer", "Error decoding barcode")
         }
-
     }
 }
