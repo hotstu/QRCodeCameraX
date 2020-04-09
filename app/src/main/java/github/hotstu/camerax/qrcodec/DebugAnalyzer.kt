@@ -30,6 +30,7 @@ class DebugAnalyzer(val listener: (Bitmap)-> Unit) : ImageAnalysis.Analyzer {
      */
     override fun analyze(image: ImageProxy) {
         listener(image.toBitmap())
+        image.close()
     }
 
     /**

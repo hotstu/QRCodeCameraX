@@ -78,7 +78,16 @@ class MainActivity : AppCompatActivity() {
                                 //setTargetRotation(rotation)
                             }.build()
 
-
+                            val debugAnalysis = ImageAnalysis.Builder().apply {
+                                setBackpressureStrategy(STRATEGY_KEEP_ONLY_LATEST)
+                                setTargetAspectRatio(screenAspectRatio)
+                                //setTargetRotation(rotation)
+                            }.build()
+                            debugAnalysis.setAnalyzer(cameraExecutor, DebugAnalyzer{
+                                mono.post {
+                                    mono.setImageBitmap(it)
+                                }
+                            })
                             val googlePlayServicesAvailable = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
                             if (googlePlayServicesAvailable == ConnectionResult.SUCCESS) {
                                 Log.d("MainActivity", "google play services avalable, using visionBarcodeDetector")
@@ -100,7 +109,7 @@ class MainActivity : AppCompatActivity() {
                             cameraProvider.bindToLifecycle(this,
                                 cameraSelector,
                                 preview,
-                                analysis)
+                                debugAnalysis)
                         }, ContextCompat.getMainExecutor(this))
                     }
                 }
