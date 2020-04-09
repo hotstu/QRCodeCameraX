@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity() {
                             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
                             val preview = Preview.Builder().apply {
                                 setTargetAspectRatio(screenAspectRatio)
-                                //setTargetRotation(rotation)
+                                setTargetRotation(rotation)
                             }.build()
 
                             // Attach the viewfinder's surface provider to preview use case
@@ -75,13 +75,13 @@ class MainActivity : AppCompatActivity() {
                             val analysis = ImageAnalysis.Builder().apply {
                                 setBackpressureStrategy(STRATEGY_KEEP_ONLY_LATEST)
                                 setTargetAspectRatio(screenAspectRatio)
-                                //setTargetRotation(rotation)
+                                setTargetRotation(rotation)
                             }.build()
 
                             val debugAnalysis = ImageAnalysis.Builder().apply {
                                 setBackpressureStrategy(STRATEGY_KEEP_ONLY_LATEST)
                                 setTargetAspectRatio(screenAspectRatio)
-                                //setTargetRotation(rotation)
+                                setTargetRotation(rotation)
                             }.build()
                             debugAnalysis.setAnalyzer(cameraExecutor, DebugAnalyzer{
                                 mono.post {
@@ -91,24 +91,17 @@ class MainActivity : AppCompatActivity() {
                             val googlePlayServicesAvailable = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
                             if (googlePlayServicesAvailable == ConnectionResult.SUCCESS) {
                                 Log.d("MainActivity", "google play services avalable, using visionBarcodeDetector")
-                                analysis.setAnalyzer(cameraExecutor, DebugAnalyzer {
-                                    mono.post {
-                                        mono.setImageBitmap(it)
-                                    }
-                                })
+                                analysis.setAnalyzer(cameraExecutor, MLQRcodeAnalyzer())
                             } else {
                                 Log.d("MainActivity", "google play services inavalable, fallback to zxing")
-                                analysis.setAnalyzer(cameraExecutor, DebugAnalyzer {
-                                    mono.post {
-                                        mono.setImageBitmap(it)
-                                    }
-                                })
+                                analysis.setAnalyzer(cameraExecutor, QRcodeAnalyzer())
                             }
                             // Must unbind the use-cases before rebinding them
                             cameraProvider.unbindAll()
                             cameraProvider.bindToLifecycle(this,
                                 cameraSelector,
                                 preview,
+                                analysis,
                                 debugAnalysis)
                         }, ContextCompat.getMainExecutor(this))
                     }
