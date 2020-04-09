@@ -38,6 +38,7 @@ class MLQRcodeAnalyzer : ImageAnalysis.Analyzer, OnSuccessListener<List<Firebase
         // Throttle calls to the detector.
         if (pendingTask != null && !pendingTask!!.isComplete) {
             Log.d("MLQRcodeAnalyzer", "Throttle calls to the detector")
+            image.close()
             return
         }
         val rotationDegrees = image.imageInfo.rotationDegrees
@@ -60,7 +61,7 @@ class MLQRcodeAnalyzer : ImageAnalysis.Analyzer, OnSuccessListener<List<Firebase
             it.addOnSuccessListener(this)
             it.addOnFailureListener(this)
         }
-
+        image.close()
     }
 
     override fun onFailure(p0: Exception) {

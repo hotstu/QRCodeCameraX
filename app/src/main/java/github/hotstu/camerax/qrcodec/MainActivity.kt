@@ -1,10 +1,12 @@
 package github.hotstu.camerax.qrcodec
 
 import android.annotation.SuppressLint
+import android.hardware.display.DisplayManager
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.View
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
@@ -46,6 +48,7 @@ class MainActivity : AppCompatActivity() {
         // Initialize our background executor
         cameraExecutor = Executors.newSingleThreadExecutor()
         val viewFinder = findViewById<PreviewView>(R.id.view_finder)
+        val mono = findViewById<ImageView>(R.id.mono)
 
         val rxPermissions = RxPermissions(this)
         rxPermissions.request(android.Manifest.permission.CAMERA)
@@ -56,27 +59,34 @@ class MainActivity : AppCompatActivity() {
                         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
                         val metrics = DisplayMetrics().also { viewFinder.display.getRealMetrics(it) }
                         val screenAspectRatio = aspectRatio(metrics.widthPixels, metrics.heightPixels)
+                        val rotation = viewFinder.display.rotation
+
                         cameraProviderFuture.addListener(Runnable {
                             // CameraProvider
                             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
                             val preview = Preview.Builder().apply {
                                 setTargetAspectRatio(screenAspectRatio)
-                                setTargetRotation(viewFinder.display.rotation)
+                                //setTargetRotation(rotation)
                             }.build()
+
                             // Attach the viewfinder's surface provider to preview use case
                             preview.setSurfaceProvider(viewFinder.createSurfaceProvider(null))
 
                             val analysis = ImageAnalysis.Builder().apply {
                                 setBackpressureStrategy(STRATEGY_KEEP_ONLY_LATEST)
                                 setTargetAspectRatio(screenAspectRatio)
-                                setTargetRotation(viewFinder.display.rotation)
+                                //setTargetRotation(rotation)
                             }.build()
 
 
                             val googlePlayServicesAvailable = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
                             if (googlePlayServicesAvailable == ConnectionResult.SUCCESS) {
                                 Log.d("MainActivity", "google play services avalable, using visionBarcodeDetector")
-                                analysis.setAnalyzer(cameraExecutor, QRcodeAnalyzer())
+                                analysis.setAnalyzer(cameraExecutor, QRcodeAnalyzer {
+                                    mono.post {
+                                        mono.setImageBitmap(it)
+                                    }
+                                })
                             } else {
                                 Log.d("MainActivity", "google play services inavalable, fallback to zxing")
                                 analysis.setAnalyzer(cameraExecutor, QRcodeAnalyzer())
@@ -91,7 +101,18 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
     }
-
+    /**
+     * We need a display listener for orientation changes that do not trigger a configuration
+     * change, for example if we choose to override config change in manifest or for 180-degree
+     * orientation changes.
+     */
+    private val displayListener = object : DisplayManager.DisplayListener {
+        override fun onDisplayAdded(displayId: Int) = Unit
+        override fun onDisplayRemoved(displayId: Int) = Unit
+        override fun onDisplayChanged(displayId: Int) {
+            //analysis?.targetRotation = .display.rotation
+        }
+    }
     /**
      *  [androidx.camera.core.ImageAnalysisConfig] requires enum value of
      *  [androidx.camera.core.AspectRatio]. Currently it has values of 4:3 & 16:9.
