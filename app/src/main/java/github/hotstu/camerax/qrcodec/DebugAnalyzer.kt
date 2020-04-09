@@ -28,7 +28,7 @@ class DebugAnalyzer(val listener: (Bitmap)-> Unit) : ImageAnalysis.Analyzer {
      * may not be received or the camera may stall, depending on back pressure setting.
      *
      */
-    override fun analyze(image: ImageProxy, rotationDegrees: Int) {
+    override fun analyze(image: ImageProxy) {
         listener(image.toBitmap())
     }
 

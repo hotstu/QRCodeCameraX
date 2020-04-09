@@ -15,7 +15,7 @@ import java.nio.ByteBuffer
  * @desc
  * @since 6/10/19
  */
-class QRcodeAnalyzer(val listener: ((Bitmap)->Unit)? = null) : ImageAnalysis.Analyzer {
+class QRcodeAnalyzer() : ImageAnalysis.Analyzer {
     private val reader: MultiFormatReader = MultiFormatReader().apply {
         val map = mapOf<DecodeHintType, Collection<BarcodeFormat>>(
             Pair(DecodeHintType.POSSIBLE_FORMATS, arrayListOf(BarcodeFormat.QR_CODE))
@@ -55,7 +55,6 @@ class QRcodeAnalyzer(val listener: ((Bitmap)->Unit)? = null) : ImageAnalysis.Ana
         //TODO 调整crop的矩形区域，目前是全屏（全屏有更好的识别体验，但是在部分手机上可能OOM）
         val source = PlanarYUVLuminanceSource(data, width, height, 0, 0, width, height, false)
         val bitmap = BinaryBitmap(HybridBinarizer(source))
-        listener?.let { it(image.toBitmap()) }
 
         try {
             val result = reader.decode(bitmap)
