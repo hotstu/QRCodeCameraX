@@ -28,11 +28,21 @@ class QRcodeAnalyzer : ImageAnalysis.Analyzer {
             Log.e("BarcodeAnalyzer", "expect YUV, now = ${image.format}")
             return
         }
-        val buffer = image.planes[0].buffer
-        val data = ByteArray(buffer.remaining())
+        val yBuffer = image.planes[0].buffer // Y
+        val uBuffer = image.planes[1].buffer // U
+        val vBuffer = image.planes[2].buffer // V
+
+        val ySize = yBuffer.remaining()
+        val uSize = uBuffer.remaining()
+        val vSize = vBuffer.remaining()
+
+        val data = ByteArray(ySize + uSize + vSize)
+        yBuffer.get(data, 0, ySize)
+        vBuffer.get(data, ySize, vSize)
+        uBuffer.get(data, ySize + vSize, uSize)
+
         val height = image.height
         val width = image.width
-        buffer.get(data)
         //TODO 调整crop的矩形区域，目前是全屏（全屏有更好的识别体验，但是在部分手机上可能OOM）
         val source = PlanarYUVLuminanceSource(data, width, height, 0, 0, width, height, false)
 

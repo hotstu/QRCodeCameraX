@@ -8,6 +8,7 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.util.Rational
 import android.view.View
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraX
 import androidx.camera.core.ImageAnalysis
@@ -37,7 +38,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        val mono = findViewById<ImageView>(R.id.mono)
         val rxPermissions = RxPermissions(this)
         rxPermissions.request(android.Manifest.permission.CAMERA)
                 .subscribe {
@@ -63,19 +64,25 @@ class MainActivity : AppCompatActivity() {
 
                         val preview = AutoFitPreviewBuilder.build(previewConfig, textureView)
                         analysis = ImageAnalysis(analysisConfig)
+                        val debugyAnalysis = ImageAnalysis(analysisConfig)
 
                         val googlePlayServicesAvailable = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
                         if (googlePlayServicesAvailable == ConnectionResult.SUCCESS) {
                             Log.d("MainActivity", "google play services avalable, using visionBarcodeDetector")
-                            analysis!!.analyzer = MLQRcodeAnalyzer()
+                            analysis!!.analyzer = QRcodeAnalyzer()
                         } else {
                             Log.d("MainActivity", "google play services inavalable, fallback to zxing")
                             analysis!!.analyzer = QRcodeAnalyzer()
                         }
-
+                        debugyAnalysis.analyzer = DebugAnalyzer {
+                            mono.post {
+                                mono.setImageBitmap(it)
+                            }
+                        }
                         CameraX.bindToLifecycle(this@MainActivity,
                                 preview,
-                                analysis)
+                                analysis,
+                                debugyAnalysis)
 
                     }
                 }
