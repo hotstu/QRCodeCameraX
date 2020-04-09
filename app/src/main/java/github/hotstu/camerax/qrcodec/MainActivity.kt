@@ -2,7 +2,6 @@ package github.hotstu.camerax.qrcodec
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.os.Handler
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.View
@@ -13,11 +12,11 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.tbruyelle.rxpermissions2.RxPermissions
-import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.math.abs
@@ -36,7 +35,6 @@ const val IMMERSIVE_FLAG_TIMEOUT = 500L
 
 class MainActivity : AppCompatActivity() {
 
-    var analyzerHandler: Handler? = null
     var analysis: ImageAnalysis? = null
     /** Blocking camera operations are performed using this executor */
     private lateinit var cameraExecutor: ExecutorService
@@ -47,45 +45,45 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         // Initialize our background executor
         cameraExecutor = Executors.newSingleThreadExecutor()
+        val viewFinder = findViewById<PreviewView>(R.id.view_finder)
 
         val rxPermissions = RxPermissions(this)
         rxPermissions.request(android.Manifest.permission.CAMERA)
                 .subscribe {
-                    textureView.post {
+                    viewFinder.post {
                         val cameraSelector = CameraSelector.Builder().requireLensFacing(
                             CameraSelector.LENS_FACING_BACK).build()
                         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-                        val metrics = DisplayMetrics().also { textureView.display.getRealMetrics(it) }
+                        val metrics = DisplayMetrics().also { viewFinder.display.getRealMetrics(it) }
                         val screenAspectRatio = aspectRatio(metrics.widthPixels, metrics.heightPixels)
                         cameraProviderFuture.addListener(Runnable {
-                            val preview = Preview.Builder().apply {
-                                setTargetAspectRatio(screenAspectRatio)
-                                setTargetRotation(textureView.display.rotation)
-                            }.build()
                             // CameraProvider
                             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+                            val preview = Preview.Builder().apply {
+                                setTargetAspectRatio(screenAspectRatio)
+                                setTargetRotation(viewFinder.display.rotation)
+                            }.build()
+                            // Attach the viewfinder's surface provider to preview use case
+                            preview.setSurfaceProvider(viewFinder.createSurfaceProvider(null))
+
                             val analysis = ImageAnalysis.Builder().apply {
                                 setBackpressureStrategy(STRATEGY_KEEP_ONLY_LATEST)
-                                //val analyzerThread = HandlerThread("BarcodeAnalyzer").apply { start() }
-                                //analyzerHandler = Handler(analyzerThread.looper)
-                                //setCallbackHandler(analyzerHandler!!)
-                                //setBackgroundExecutor {  }
                                 setTargetAspectRatio(screenAspectRatio)
-                                setTargetRotation(textureView.display.rotation)
+                                setTargetRotation(viewFinder.display.rotation)
                             }.build()
 
 
                             val googlePlayServicesAvailable = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
                             if (googlePlayServicesAvailable == ConnectionResult.SUCCESS) {
                                 Log.d("MainActivity", "google play services avalable, using visionBarcodeDetector")
-                                analysis.setAnalyzer(cameraExecutor, MLQRcodeAnalyzer())
+                                analysis.setAnalyzer(cameraExecutor, QRcodeAnalyzer())
                             } else {
                                 Log.d("MainActivity", "google play services inavalable, fallback to zxing")
                                 analysis.setAnalyzer(cameraExecutor, QRcodeAnalyzer())
                             }
                             // Must unbind the use-cases before rebinding them
                             cameraProvider.unbindAll()
-                            cameraProvider.bindToLifecycle(this@MainActivity,
+                            cameraProvider.bindToLifecycle(this,
                                 cameraSelector,
                                 preview,
                                 analysis)
@@ -113,20 +111,10 @@ class MainActivity : AppCompatActivity() {
         return AspectRatio.RATIO_16_9
     }
 
-    override fun onResume() {
-        super.onResume()
-        // Before setting full screen flags, we must wait a bit to let UI settle; otherwise, we may
-        // be trying to set app to immersive mode before it's ready and the flags do not stick
-        textureView.postDelayed({
-            textureView.systemUiVisibility = FLAGS_FULLSCREEN
-        }, IMMERSIVE_FLAG_TIMEOUT)
-    }
 
     override fun onDestroy() {
-        analyzerHandler?.removeCallbacksAndMessages(null)
-        analyzerHandler?.looper?.quitSafely()
-        cameraExecutor.shutdown()
         analysis?.clearAnalyzer()
+        cameraExecutor.shutdown()
         super.onDestroy()
     }
 
