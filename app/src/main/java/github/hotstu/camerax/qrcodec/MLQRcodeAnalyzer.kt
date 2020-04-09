@@ -1,5 +1,6 @@
 package github.hotstu.camerax.qrcodec
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
@@ -34,6 +35,7 @@ class MLQRcodeAnalyzer : ImageAnalysis.Analyzer, OnSuccessListener<List<Firebase
     var pendingTask: Task<out Any>? = null
 
 
+    @SuppressLint("UnsafeExperimentalUsageError")
     override fun analyze(image: ImageProxy) {
         // Throttle calls to the detector.
         if (pendingTask != null && !pendingTask!!.isComplete) {

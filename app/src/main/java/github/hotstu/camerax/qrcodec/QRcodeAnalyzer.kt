@@ -7,6 +7,7 @@ import androidx.camera.core.ImageProxy
 import com.google.zxing.*
 import com.google.zxing.common.HybridBinarizer
 import java.nio.ByteBuffer
+import java.util.*
 
 
 /**
@@ -15,6 +16,12 @@ import java.nio.ByteBuffer
  * @since 6/10/19
  */
 class QRcodeAnalyzer() : ImageAnalysis.Analyzer {
+    private val frameRateWindow = 8
+    private val frameTimestamps = ArrayDeque<Long>(5)
+    private var lastAnalyzedTimestamp = 0L
+    var framesPerSecond: Double = -1.0
+        private set
+
     private val reader: MultiFormatReader = MultiFormatReader().apply {
         val map = mapOf<DecodeHintType, Collection<BarcodeFormat>>(
             Pair(DecodeHintType.POSSIBLE_FORMATS, arrayListOf(BarcodeFormat.QR_CODE))
@@ -44,19 +51,34 @@ class QRcodeAnalyzer() : ImageAnalysis.Analyzer {
             image.close()
             return
         }
+        // Keep track of frames analyzed
+        val currentTime = System.currentTimeMillis()
+        frameTimestamps.push(currentTime)
+
+        // Compute the FPS using a moving average
+        while (frameTimestamps.size >= frameRateWindow) frameTimestamps.removeLast()
+        val timestampFirst = frameTimestamps.peekFirst() ?: currentTime
+        val timestampLast = frameTimestamps.peekLast() ?: currentTime
+        framesPerSecond = 1.0 / ((timestampFirst - timestampLast) /
+                frameTimestamps.size.coerceAtLeast(1).toDouble()) * 1000.0
+
+        // Analysis could take an arbitrarily long amount of time
+        // Since we are running in a different thread, it won't stall other use cases
+
+        lastAnalyzedTimestamp = frameTimestamps.first
         val height = image.height
         val width = image.width
         //TODO 调整crop的矩形区域，目前是全屏（全屏有更好的识别体验，但是在部分手机上可能OOM）
         val source = PlanarYUVLuminanceSource(image.toNv21(), width, height, 0, 0, width, height, false)
+        image.close()
+
         val bitmap = BinaryBitmap(HybridBinarizer(source))
 
         try {
             val result = reader.decode(bitmap)
             Log.e("BarcodeAnalyzer", "resolved!!! = $result")
         } catch (e: Exception) {
-            Log.d("BarcodeAnalyzer", "Error decoding barcode")
-        } finally {
-            image.close()
+            Log.d("BarcodeAnalyzer", "Error decoding barcode: $framesPerSecond")
         }
     }
 

@@ -91,7 +91,7 @@ class MainActivity : AppCompatActivity() {
                             val googlePlayServicesAvailable = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
                             if (googlePlayServicesAvailable == ConnectionResult.SUCCESS) {
                                 Log.d("MainActivity", "google play services avalable, using visionBarcodeDetector")
-                                analysis.setAnalyzer(cameraExecutor, MLQRcodeAnalyzer())
+                                analysis.setAnalyzer(cameraExecutor, QRcodeAnalyzer())
                             } else {
                                 Log.d("MainActivity", "google play services inavalable, fallback to zxing")
                                 analysis.setAnalyzer(cameraExecutor, QRcodeAnalyzer())
@@ -101,8 +101,7 @@ class MainActivity : AppCompatActivity() {
                             cameraProvider.bindToLifecycle(this,
                                 cameraSelector,
                                 preview,
-                                analysis,
-                                debugAnalysis)
+                                analysis)
                         }, ContextCompat.getMainExecutor(this))
                     }
                 }
