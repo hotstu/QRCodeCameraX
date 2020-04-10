@@ -20,6 +20,7 @@ class QRcodeAnalyzer() : ImageAnalysis.Analyzer {
     private val frameTimestamps = ArrayDeque<Long>(5)
     private var lastAnalyzedTimestamp = 0L
     private var nv21 = ByteArray(0)
+    private var mYBuffer = ByteArray(0)
     var framesPerSecond: Double = -1.0
         private set
 
@@ -70,7 +71,8 @@ class QRcodeAnalyzer() : ImageAnalysis.Analyzer {
         val height = image.height
         val width = image.width
         //TODO 调整crop的矩形区域，目前是全屏（全屏有更好的识别体验，但是在部分手机上可能OOM）
-        val source = PlanarYUVLuminanceSource(image.toNv21(), width, height, 0, 0, width, height, false)
+        ///PlanarYUVLuminaceSource only care the Y plane
+        val source = PlanarYUVLuminanceSource(image.toYBuffer(), width, height, 0, 0, width, height, false)
         image.close()
 
         val bitmap = BinaryBitmap(HybridBinarizer(source))
@@ -81,6 +83,25 @@ class QRcodeAnalyzer() : ImageAnalysis.Analyzer {
         } catch (e: Exception) {
             Log.d("BarcodeAnalyzer", "Error decoding barcode: $framesPerSecond")
         }
+    }
+
+    private fun ImageProxy.toYBuffer(): ByteArray {
+        val yPlane = planes[0]
+        val yBuffer = yPlane.buffer
+        yBuffer.rewind()
+        val ySize = yBuffer.remaining()
+        var position = 0
+        if (mYBuffer.size != ySize) {
+            Log.w("BarcodeAnalyzer", "swap buffer since size ${mYBuffer.size} != ${ySize}")
+            mYBuffer = ByteArray(ySize)
+        }
+        // Add the full y buffer to the array. If rowStride > 1, some padding may be skipped.
+        for (row in 0 until height) {
+            yBuffer.get(mYBuffer, position, width)
+            position += width
+            yBuffer.position(min(ySize, yBuffer.position() - width + yPlane.rowStride))
+        }
+        return mYBuffer
     }
 
     private fun ImageProxy.toNv21(): ByteArray {
@@ -113,8 +134,7 @@ class QRcodeAnalyzer() : ImageAnalysis.Analyzer {
         val uRowStride = uPlane.rowStride
         val vPixelStride = vPlane.pixelStride
         val uPixelStride = uPlane.pixelStride
-        // Interleave the u and v frames, filling up the rest of the buffer. Use two line buffers to
-// perform faster bulk gets from the byte buffers.
+         //Interleave the u and v frames, filling up the rest of the buffer. Use two line buffers to perform faster bulk gets from the byte buffers.
         val vLineBuffer = ByteArray(vRowStride)
         val uLineBuffer = ByteArray(uRowStride)
         for (row in 0 until chromaHeight) {
