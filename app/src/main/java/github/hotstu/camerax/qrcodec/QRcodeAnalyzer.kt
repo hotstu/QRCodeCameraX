@@ -6,8 +6,8 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import com.google.zxing.*
 import com.google.zxing.common.HybridBinarizer
-import java.nio.ByteBuffer
 import java.util.*
+import kotlin.math.min
 
 
 /**
@@ -19,6 +19,7 @@ class QRcodeAnalyzer() : ImageAnalysis.Analyzer {
     private val frameRateWindow = 8
     private val frameTimestamps = ArrayDeque<Long>(5)
     private var lastAnalyzedTimestamp = 0L
+    private var nv21 = ByteArray(0)
     var framesPerSecond: Double = -1.0
         private set
 
@@ -82,17 +83,8 @@ class QRcodeAnalyzer() : ImageAnalysis.Analyzer {
         }
     }
 
-    /**
-     * Helper extension function used to extract a byte array from an image plane buffer
-     */
-    private fun ByteBuffer.toByteArray(): ByteArray {
-        rewind()    // Rewind the buffer to zero
-        val data = ByteArray(remaining())
-        get(data)   // Copy the buffer into a byte array
-        return data // Return the byte array
-    }
-
     private fun ImageProxy.toNv21(): ByteArray {
+        //TODO use jni or shader script for better performance?
         val yPlane = planes[0]
         val uPlane = planes[1]
         val vPlane = planes[2]
@@ -104,19 +96,16 @@ class QRcodeAnalyzer() : ImageAnalysis.Analyzer {
         vBuffer.rewind()
         val ySize = yBuffer.remaining()
         var position = 0
-        // TODO(b/115743986): Pull these bytes from a pool instead of allocating for every image.
-        val nv21 =
-            ByteArray(ySize + width * height / 2)
+        val size = ySize + width * height / 2
+        if (nv21.size != size) {
+            Log.w("BarcodeAnalyzer", "swap buffer since size ${nv21.size} != ${size}")
+            nv21 = ByteArray(size)
+        }
         // Add the full y buffer to the array. If rowStride > 1, some padding may be skipped.
         for (row in 0 until height) {
             yBuffer[nv21, position, width]
             position += width
-            yBuffer.position(
-                Math.min(
-                    ySize,
-                    yBuffer.position() - width + yPlane.rowStride
-                )
-            )
+            yBuffer.position(min(ySize, yBuffer.position() - width + yPlane.rowStride))
         }
         val chromaHeight = height / 2
         val chromaWidth = width / 2
@@ -129,8 +118,8 @@ class QRcodeAnalyzer() : ImageAnalysis.Analyzer {
         val vLineBuffer = ByteArray(vRowStride)
         val uLineBuffer = ByteArray(uRowStride)
         for (row in 0 until chromaHeight) {
-            vBuffer[vLineBuffer, 0, Math.min(vRowStride, vBuffer.remaining())]
-            uBuffer[uLineBuffer, 0, Math.min(uRowStride, uBuffer.remaining())]
+            vBuffer[vLineBuffer, 0, min(vRowStride, vBuffer.remaining())]
+            uBuffer[uLineBuffer, 0, min(uRowStride, uBuffer.remaining())]
             var vLineBufferPosition = 0
             var uLineBufferPosition = 0
             for (col in 0 until chromaWidth) {

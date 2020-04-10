@@ -14,7 +14,5 @@ MLQRcodeAnalyzer: 基于firebase 机器视觉的二维码识别，(需要设备�
 article：https://www.jianshu.com/p/3ce81b55468d
 
 2020.4.2日更新：
-TODO androidx beta02
-TODO create library
 后记：目前camerax还没有发布稳定版，很多api都在变化中,所以如果升级了依赖版本可能会报很多错，等google发布正式版本吧
 
