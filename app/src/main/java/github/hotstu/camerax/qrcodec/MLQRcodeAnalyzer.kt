@@ -22,6 +22,7 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
  * @since 6/10/19
  */
 class MLQRcodeAnalyzer : ImageAnalysis.Analyzer, OnSuccessListener<List<FirebaseVisionBarcode>>, OnFailureListener {
+    private val fpsDelegate = FpsDelegate()
 
     private val detector: FirebaseVisionBarcodeDetector by lazy {
         val options = FirebaseVisionBarcodeDetectorOptions.Builder()
@@ -43,6 +44,7 @@ class MLQRcodeAnalyzer : ImageAnalysis.Analyzer, OnSuccessListener<List<Firebase
             image.close()
             return
         }
+        fpsDelegate.tick()
         val rotationDegrees = image.imageInfo.rotationDegrees
         //YUV_420 is normally the input type here
         var rotation = rotationDegrees % 360
@@ -64,6 +66,7 @@ class MLQRcodeAnalyzer : ImageAnalysis.Analyzer, OnSuccessListener<List<Firebase
             it.addOnFailureListener(this)
         }
         image.close()
+        Log.d("MLQRcodeAnalyzer", "frames: ${fpsDelegate.framesPerSecond}")
     }
 
     override fun onFailure(p0: Exception) {
