@@ -70,7 +70,7 @@ class MainActivity : AppCompatActivity() {
                             }.build()
 
                             // Attach the viewfinder's surface provider to preview use case
-                            preview.setSurfaceProvider(viewFinder.createSurfaceProvider(null))
+                            preview.setSurfaceProvider(viewFinder.createSurfaceProvider())
 
                             val analysis = ImageAnalysis.Builder().apply {
                                 setBackpressureStrategy(STRATEGY_KEEP_ONLY_LATEST)
