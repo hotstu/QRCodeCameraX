@@ -14,7 +14,7 @@ import kotlin.math.min
  * @desc
  * @since 6/10/19
  */
-class QRcodeAnalyzer() : ImageAnalysis.Analyzer {
+class QRcodeAnalyzer(private val resultHandler: (String?) -> Unit) : ImageAnalysis.Analyzer {
     private var mYBuffer = ByteArray(0)
     private val fpsDelegate = FpsDelegate()
 
@@ -58,10 +58,11 @@ class QRcodeAnalyzer() : ImageAnalysis.Analyzer {
 
         try {
             val result = reader.decode(bitmap)
-            Log.e("BarcodeAnalyzer", "resolved!!! = $result")
+            resultHandler.invoke(result.text)
         } catch (e: Exception) {
-            Log.d("BarcodeAnalyzer", "Error decoding barcode: ${fpsDelegate.framesPerSecond}")
+            resultHandler.invoke(e.message)
         }
+        Log.d("ZxingQRcodeAnalyzer", "frames: ${fpsDelegate.framesPerSecond}")
     }
 
     private fun ImageProxy.toYBuffer(): ByteArray {
@@ -71,7 +72,7 @@ class QRcodeAnalyzer() : ImageAnalysis.Analyzer {
         val ySize = yBuffer.remaining()
         var position = 0
         if (mYBuffer.size != ySize) {
-            Log.w("BarcodeAnalyzer", "swap buffer since size ${mYBuffer.size} != ${ySize}")
+            Log.w("BarcodeAnalyzer", "swap buffer since size ${mYBuffer.size} != $ySize")
             mYBuffer = ByteArray(ySize)
         }
         // Add the full y buffer to the array. If rowStride > 1, some padding may be skipped.

@@ -12,10 +12,19 @@
       android:layout_width="match_parent"
       android:layout_height="match_parent" />
 
-  <ImageView
-      android:id="@+id/mono"
-      android:layout_width="200dp"
-      android:layout_height="200dp"
+  <TextView
+      android:id="@+id/qr_result"
+      android:layout_width="0dp"
+      android:layout_height="0dp"
+      android:shadowColor="#000000"
+      android:shadowDx="0"
+      android:shadowDy="1"
+      android:shadowRadius="2"
+      android:textColor="@android:color/white"
+      android:gravity="center"
       app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toTopOf="parent" />
+      app:layout_constraintTop_toTopOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintBottom_toBottomOf="parent"
+      />
 </androidx.constraintlayout.widget.ConstraintLayout>
