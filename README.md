@@ -6,7 +6,6 @@
 # QRCodeCameraX
 QRcode decoder based on CameraX &amp; zxing-core &amp; ML kit, in less than 50 lines
 
-# latest version(targeting beta02)：[QRCodeCameraX/beta02](https://github.com/hotstu/QRCodeCameraX/tree/beta02)
 
 基于CameraX api，代码极度精简，没有垃圾代码，直接操作yuvimage buffer，识别速度快
 
@@ -20,9 +19,6 @@ article：https://www.jianshu.com/p/3ce81b55468d
 
 后记：目前camerax还没有发布稳定版，很多api都在变化中,所以如果升级了依赖版本可能会报很多错，等google发布正式版本吧
 
-#### 2020.4.2日更新：
-
-CameraX1.0.0-beta02已经发布，不出所料大量的breaking changes，目前网上的资料包括官方的教程还是旧的，这里放出最新的适配：
 
 beta02的版本：[QRCodeCameraX/beta02](https://github.com/hotstu/QRCodeCameraX/tree/beta02)
 
