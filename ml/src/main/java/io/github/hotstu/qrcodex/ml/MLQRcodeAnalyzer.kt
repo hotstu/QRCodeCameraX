@@ -1,7 +1,6 @@
-package github.hotstu.camerax.qrcodec
+package io.github.hotstu.qrcodex.ml
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import com.google.android.gms.tasks.Task
@@ -20,7 +19,7 @@ import com.google.mlkit.vision.common.InputImage
  * @since 2021-01-08
  */
 class MLQRcodeAnalyzer(private val resultHandler: (String?) -> Unit) : ImageAnalysis.Analyzer {
-    private val fpsDelegate = FpsDelegate()
+    //private val fpsDelegate = FpsDelegate()
 
     private val scanner: BarcodeScanner by lazy {
         val options = BarcodeScannerOptions.Builder()
@@ -39,10 +38,10 @@ class MLQRcodeAnalyzer(private val resultHandler: (String?) -> Unit) : ImageAnal
         if (mediaImage != null) {
             val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
 
-            fpsDelegate.tick()
+            //fpsDelegate.tick()
 
             pendingTask = scanner.process(image)
-                .addOnSuccessListener{
+                .addOnSuccessListener {
                     resultHandler.invoke(it.joinToString { barcode -> barcode?.rawValue.toString() })
                 }
                 .addOnFailureListener {
@@ -52,6 +51,6 @@ class MLQRcodeAnalyzer(private val resultHandler: (String?) -> Unit) : ImageAnal
                     imageProxy.close()
                 }
         }
-        Log.d("MLQRcodeAnalyzer", "frames: ${fpsDelegate.framesPerSecond}")
+        //Log.d("MLQRcodeAnalyzer", "frames: ${fpsDelegate.framesPerSecond}")
     }
 }

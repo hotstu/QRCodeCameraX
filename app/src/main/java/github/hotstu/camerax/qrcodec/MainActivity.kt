@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -16,6 +17,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import com.tbruyelle.rxpermissions2.RxPermissions
+import io.github.hotstu.qrcodex.QRcodeAnalyzer
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.math.abs
@@ -30,7 +32,6 @@ class MainActivity : AppCompatActivity() {
 
     private val qrResult get() = findViewById<TextView>(R.id.qr_result)
 
-    private val useMlKitDetector = true
 
     @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,6 +40,7 @@ class MainActivity : AppCompatActivity() {
         // Initialize our background executor
         cameraExecutor = Executors.newSingleThreadExecutor()
         val viewFinder = findViewById<PreviewView>(R.id.view_finder)
+        val useMlKitDetector = intent.extras?.getBoolean("useMlKitDetector")?: false
 
         val rxPermissions = RxPermissions(this)
         rxPermissions.request(android.Manifest.permission.CAMERA)
@@ -69,8 +71,12 @@ class MainActivity : AppCompatActivity() {
                             }.build()
 
                             if(useMlKitDetector){
-                                analysis.setAnalyzer(cameraExecutor, MLQRcodeAnalyzer(this::onResult))
+                                Log.e("MainActivity", "MLQRcodeAnalyzer")
+                                analysis.setAnalyzer(cameraExecutor,
+                                    io.github.hotstu.qrcodex.ml.MLQRcodeAnalyzer(this::onResult)
+                                )
                             } else{
+                                Log.e("MainActivity", "QRcodeAnalyzer")
                                 analysis.setAnalyzer(cameraExecutor, QRcodeAnalyzer(this::onResult))
                             }
                             // Must unbind the use-cases before rebinding them

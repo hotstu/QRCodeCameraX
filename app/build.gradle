@@ -30,6 +30,8 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'com.tbruyelle.rxpermissions2:rxpermissions:0.9.5'
+    implementation project(path: ':ml')
+    implementation project(path: ':zxing')
     // CameraX core library using the camera2 implementation
     def camerax_version = "1.0.0"
     // The following line is optional, as the core library is included indirectly by camera-camera2
@@ -41,10 +43,6 @@ dependencies {
     implementation "androidx.camera:camera-view:1.0.0-alpha25"
     // If you want to additionally use the CameraX Extensions library
     implementation "androidx.camera:camera-extensions:1.0.0-alpha25"
-
-
-    implementation 'com.google.zxing:core:3.3.2'
-    implementation 'com.google.mlkit:barcode-scanning:16.1.0'
 
     testImplementation 'junit:junit:4.12'
 }

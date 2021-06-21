@@ -1,1 +1,3 @@
 include ':app'
+include ':zxing'
+include ':ml'
